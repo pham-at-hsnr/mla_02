@@ -3,14 +3,14 @@ TYPE=template-exercise
 TYPE_VERSION=3
 
 # name of the exercise
-NAME=lx-object-detection
+NAME=distance_estimation
 
 # recipe repository and location
 # - fully qualified name of the recipe repository, e.g., 'duckietown/duckietown-lx-recipes'
-RECIPE_REPOSITORY=duckietown/lx-recipe-object-detection
+RECIPE_REPOSITORY=pham-at-hsnr/mla_recipe_02
 
 # - branch of RECIPE_REPOSITORY containing the recipe
-RECIPE_BRANCH=ente
+RECIPE_BRANCH=main
 
 # - location of the recipe inside the RECIPE_REPOSITORY/RECIPE_BRANCH above
 RECIPE_LOCATION=
