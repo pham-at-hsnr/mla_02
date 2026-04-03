@@ -6,6 +6,7 @@ ASSETS_DIR = Path("/data/")
 DATA_COLLECTION_ROOT = ASSETS_DIR / "data_collection"
 
 MODEL_PATH = PROJECT_ROOT / "assets" / "best.onnx"
+DISTANCE_MODEL_PATH = PROJECT_ROOT / "assets" / "numpy_weights.npz"
 CLASSES_YAML = PROJECT_ROOT / "assets" / "classes.yaml"
 
 DATASET_DIR =  ASSETS_DIR / "duckietown_dataset"
