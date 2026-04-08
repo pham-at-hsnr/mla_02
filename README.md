@@ -1,202 +1,151 @@
-<p align="center">
-<img src="./assets/images/dtlogo.png" alt="Duckietown Logo" width="50%">
-</p>
+# Duckietown Learning Experience
 
-# **Learning Experience (LX): Object Detection**
+Dies ist eine angepasste Duckietown Learning Experience zum Thema maschinelles Lernen fuer robotische Wahrnehmung und einfache handlungsrelevante Entscheidungslogik.
 
-# About these activities
+Im Mittelpunkt steht eine konkrete Frage aus der Robotik: Wie kann ein Roboter aus Bildinformationen abschaetzen, wie weit ein erkanntes Objekt entfernt ist, und diese Information anschliessend fuer sein Verhalten nutzen?
 
-This learning experience will take you through the process of collecting data, automatically annotating it, 
-and using this to train a neural network to perform object detection using the robot's camera image. We will then use this trained model
-to ensure that we don't run over any duckie pedestrians in Duckietown. 
-We will use one of the most popular object detection neural networks, called [YOLO (v11)](https://docs.ultralytics.com/models/yolo11/).
-You will also have to integrate this trained model into a feedback controller so that we don't run over duckies. 
-For now, we will just stop whenever an object (duckie) is detected in the road. 
+Das Repository verbindet dafuer drei Ebenen:
 
-This learning experience is provided by the Duckietown team and can be run on Duckiebots. Visit us at the 
-[Duckietown Website](https://www.duckietown.com) for more learning materials, documentation, and demos.
+- eine vorgegebene Objekterkennung als Blackbox
+- das Training eines einfachen Regressionsmodells mit Gradient Descent
+- die Integration des gelernten Distanzmodells in einen Duckietown-Agenten
 
-For guided setup instructions, lecture content, and more related to this LX, 
-see [our Self-Driving Cars with Duckietown MOOC on EdX](https://learning.edx.org/course/course-v1:ETHx+DT-01x+1T2025/home).
+## Ziel der Learning Experience
 
-## Notes on Additional Accounts that you will require
+Das uebergeordnete Ziel ist es, ein Distanzschaetzungsmodell von Grund auf zu entwickeln, zu trainieren und in eine lauffaehige Agentenlogik einzubetten.
 
-**NOTE 1**: This LX will require you to have a Google account (we will use [Google Colab](https://colab.research.google.com/) and this will
-require uploading data to your [Google Drive](https://drive.google.com/drive/)). 
+Die konkrete Anwendung ist eine Distanzschaetzung fuer erkannte Objekte. Die Objekterkennung selbst wird in dieser Learning Experience als Blackbox vorgegeben. Studierende muessen also keinen eigenen Detektor trainieren oder verbessern. Stattdessen liegt der Fokus darauf, aus den Merkmalen einer vorhandenen Detektion, insbesondere der Breite und Hoehe einer Bounding Box im Kamerabild, die Entfernung zum Objekt abzuschaetzen.
 
-**NOTE 2**: You will also need an account for [Hugging Face](https://huggingface.co). You can click the `Sign Up` button on the top right to create an account. Feel free to join the `Duckietown` organization when you get the verification step!
+Diese Schaetzung wird spaeter genutzt, um auf Hindernisse oder Duckies angemessen zu reagieren. Die Learning Experience soll damit nicht nur zeigen, wie ein Regressionsmodell trainiert wird, sondern auch, wie ein ML-Baustein Teil eines groesseren robotischen Systems wird.
 
-**NOTE 3**: In order to use the SAM3 model, you will have to request access by [filling out the request form](https://huggingface.co/facebook/sam3). This can take a few minutes for approval so if you do it now you will be approved by the time you get to the auto-labelling part. 
+## Learning Outcomes
 
-# Instructions
+Nach Bearbeitung dieser Learning Experience solltest du in der Lage sein:
 
-**(If not already done) Clone this repository**
+- den Unterschied zwischen Klassifikation, Objekterkennung und Regression in einem robotischen Kontext zu erklaeren
+- zu erklaeren, warum die Objekterkennung in dieser Aufgabe bewusst als gegebene Blackbox behandelt wird
+- zu begruenden, warum Bounding-Box-Merkmale fuer eine einfache Distanzschaetzung nutzbar sind
+- einen Trainingsprozess mit Gradient Descent konzeptionell nachzuvollziehen und praktisch umzusetzen
+- Gewichte eines gelernten Regressionsmodells mit NumPy zu exportieren und fuer Inferenz wieder zu laden
+- eine Distanzfunktion in bestehende Agentenlogik zu integrieren
+- die Rolle von Konfidenzschwellen, Stop-Distanzen und Kamerageometrie fuer sicheres Verhalten zu verstehen
+- die Grenzen eines einfachen Modells zu reflektieren, zum Beispiel Sensitivitaet gegen Perspektive, Kameraposition oder schlechte Detektionen
 
-The recommended way to use this repository is to make a fork and then clone that fork. 
+## Didaktischer Fokus
 
-This can be done through the GitHub web interface. However, you are also free to simply clone this repository and get started. 
+Diese Einheit ist bewusst anwendungsnah aufgebaut. Statt ein abstraktes Regressionsproblem isoliert zu betrachten, arbeitest du an einer Aufgabe, die direkt in einem robotischen Wahrnehmungs- und Kontrollsystem verwendet wird.
 
-Example instructions to fork a repository and configure to pull from upstream can be found in the 
-[duckietown-lx repository README](https://github.com/duckietown/duckietown-lx/blob/mooc2022/README.md).
+Dadurch lernst du nicht nur mathematische Grundlagen, sondern auch den Transfer in ein Software-System mit mehreren Komponenten:
 
+- Wahrnehmung ueber Kamerabilder
+- Objekterkennung ueber eine vorgegebene Blackbox
+- Distanzschaetzung ueber ein selbst trainiertes Regressionsmodell
+- Verhaltensentscheidung des Agenten, zum Beispiel Stoppen bei zu geringem Abstand
 
-## 1. Make sure your LX is up-to-date
+## Ablauf und Struktur
 
-Update your exercise definition and instructions,
+Die Anleitungen und Aufgaben befinden sich hauptsaechlich in den Jupyter-Notebooks in diesem Repository. Die Notebooks bauen fachlich aufeinander auf und fuehren Schritt fuer Schritt von den Grundlagen bis zur Integration.
 
-    git remote add upstream git@github.com:duckietown/lx-object-detection
-    git pull upstream ente
+Die Struktur ist in zwei thematische Bloecke gegliedert:
 
-## 2. Make sure your system is up-to-date
+### 1. Training
 
-- 💻 This is an `ente` learning experience (note the branch name). Make sure your Duckietown Shell is set to an `ente` profile 
-- (and not, e.g., a `daffy` one). You can check your current distribution with
+Im Notebook `notebooks/01-Training/training.ipynb` trainierst du das Distanzmodell. Die Objekterkennung ist bereits gegeben und liefert Bounding Boxes. Deine Aufgabe besteht darin, aus Breite und Hoehe dieser Bounding Boxes ein Regressionsmodell zu lernen, das die Distanz zum Objekt abschaetzt. Dabei soll das Modell explizit mit Gradient Descent trainiert werden.
 
-    dts profile list
+Ein wichtiger Bestandteil dieses Schritts ist ausserdem der Export der gelernten Gewichte mit NumPy, damit sie spaeter ausserhalb des Notebooks fuer die Inferenz verwendet werden koennen.
 
-  To switch to an ente profile, follow the [Duckietown Manual DTS installation instructions](https://docs.duckietown.com/ente/duckietown-manual/10-setup/02-software/duckietown-shell-dts-installation.html#dt-account-switch-profile).
+### 2. Integration
 
+Im Notebook `notebooks/02-Integration/integration.ipynb` wird das trainierte Modell in den Agenten eingebunden. Ziel ist es, die Distanzschaetzung im laufenden System nutzbar zu machen, waehrend die Objekterkennung weiterhin als bereits vorhandene Komponente behandelt wird.
 
-- 💻 Always make sure your Duckietown Shell is updated to the latest version. See [installation instructions](https://github.com/duckietown/duckietown-shell)
+## Verbindung zum Code
 
-- 💻 Update the shell commands: `dts update`
+Neben den Notebooks enthaelt das Repository Python-Code fuer die spaetere Systemintegration.
 
-- 💻 Update your laptop/desktop: `dts desktop update`
+Besonders relevant sind:
 
-- 🚙 Update your Duckiebot: `dts duckiebot update ROBOTNAME` (where `ROBOTNAME` is the name of your Duckiebot - real or virtual.)
+- `packages/solution/student_distance_estimator.py`
+  Hier implementierst oder vervollstaendigst du die Distanzschaetzung auf Basis der trainierten Modellgewichte. Diese Gewichte sollen zuvor mit NumPy aus dem Trainings-Notebook exportiert und hier wieder geladen werden.
+- `packages/solution/model.py`
+  Diese Datei verbindet die vorgegebene Objekterkennung, die Distanzlogik und das Agentenverhalten.
+- `packages/solution/config.py`
+  Hier sind wichtige Parameter wie Modellpfade, Konfidenzschwellen und Stop-Distanzen definiert.
 
-**Note**: if your virtual robot hangs indefinitely when you try to update it, you can try to restart it with:
+Damit wird sichtbar, wie aus Notebook-Ergebnissen ein wiederverwendbarer Bestandteil eines Robotik-Stacks entsteht.
 
-    dts duckiebot virtual restart ROBOTNAME
+## Empfohlener Workflow
 
+Eine sinnvolle Bearbeitungsreihenfolge ist:
 
-## 3. Work on the exercise
+1. Verstehe die Aufgabenaufteilung: Detektion ist gegeben, Distanzschaetzung ist dein eigentlicher ML-Teil.
+2. Trainiere im Notebook ein Regressionsmodell nur auf Basis von `pixel_width` und `pixel_height`.
+3. Speichere die gelernten Gewichte mit NumPy, zum Beispiel in einer `.npz`-Datei.
+4. Lege diese Datei an der erwarteten Stelle im Projekt ab.
+5. Lade die Gewichte in `student_distance_estimator.py` mit `numpy.load(...)`.
+6. Verwende die geladenen Gewichte in der Inferenzfunktion `estimate_distance(...)`.
+7. Teste die Integration im Agenten und beobachte das Verhalten kritisch.
 
-### Launch the code editor
+## Export und Import der Gewichte mit NumPy
 
-#### SSL certificate
+Fuer diese Learning Experience sollen die Gewichte bewusst einfach und transparent gespeichert werden. Verwende dafuer NumPy statt eines komplexeren Modellformats.
 
-If you have not done so already, set up your local SSL certificate needed to run the learning experience editor with:
+Ein moeglicher Export im Training-Notebook sieht so aus:
 
-    sudo apt install libnss3-tools
-    dts setup mkcert
-
-
-Open the code editor by running the following command,
-
-```
-dts code editor
-```
-
-Wait for a URL to appear on the terminal, then click on it or copy-paste it in the address bar
-of your browser to access the code editor. The first thing you will see in the code editor is
-this same document, you can continue there.
-
-**NOTE**: if you are running Duckietown inside a devcontainer, make sure to [install the certificate for your host machine as well](https://docs.duckietown.com/ente/duckietown-manual/10-setup/setup-devcontainer.html#dts-code-run). 
-
-
-### Walkthrough of notebooks
-
-**NOTE**: You should be reading this from inside the code editor in your browser.
-
-Inside the code editor, use the navigator sidebar on the left-hand side to navigate to the
-`notebooks` directory and open the first notebook.
-
-Follow the instructions on the notebook and work through the notebooks in sequence.
-
-
-### Testing with the Duckiematrix
-
-To test your code in the Duckiematrix you will need a virtual robot. You can create one with the command:
-
-```
-dts duckiebot virtual create --type duckiebot --configuration DB21J VBOT
+```python
+np.savez("numpy_weights.npz", weights=weights, bias=bias)
 ```
 
-where `VBOT` is the hostname. It can be anything you like, with [some constraints](https://docs.duckietown.com/ente/duckietown-manual/10-setup/03-duckiebot/flashing-sd-card-duckiebot-initialization-complete.html). Make sure to remember your robot (host)name for later.
+Dabei gilt:
 
-Then you can start your virtual robot with the command:
+- `weights` enthaelt zum Beispiel die gelernten Regressionsgewichte fuer Breite und Hoehe
+- `bias` enthaelt den Bias-Term des Modells
+- die Datei `numpy_weights.npz` kann spaeter direkt in der Codebasis geladen werden
 
-```
-dts duckiebot virtual start VBOT
-```
+Der Import in `student_distance_estimator.py` erfolgt dann mit `numpy.load(...)`, zum Beispiel:
 
-You should see it with a status `Booting` and finally `Ready` if you look at `dts fleet discover`: 
-
-```
-     | Hardware |   Type    | Model |  Status  | Hostname 
----  | -------- | --------- | ----- | -------- | ---------
-[VBOT] |  virtual | duckiebot | DB21J |  Ready   | [VBOT].local
+```python
+params = np.load(DISTANCE_MODEL_PATH)
+weights = params["weights"]
+bias = params["bias"]
 ```
 
-Now that your virtual robot is ready, you can start the Duckiematrix. From a terminal in this exercise directory that you 
-cloned do:
+Wichtig ist, dass Export und Import dieselben Schluessel verwenden. Wenn du also mit `weights=` und `bias=` speicherst, musst du spaeter auch genau diese Namen beim Laden verwenden.
 
-```
-dts code start_matrix
-```
+## Was du fachlich mitnehmen sollst
 
-You should see the Unity-based Duckiematrix simulator start up. The startup screen will look like:
+Diese Learning Experience ist nicht nur ein Coding Exercise. Sie soll dir helfen, ein belastbares Verstaendnis fuer den gesamten ML-Lebenszyklus in einer kleinen, aber realistischen Robotik-Anwendung aufzubauen:
 
-![duckiematrix_start](assets/images/duckiematrix-start.png)
+- Problemformulierung
+- Merkmalswahl
+- Datennutzung
+- Modelltraining
+- Gewichtsexport und spaetere Wiederverwendung
+- Inferenz
+- Integration
+- Bewertung von Fehlverhalten und Grenzen
 
-Your Duckiebot is at the start of a long straightaway with duckies crossing the road. 
+Gerade dieser durchgehende Zusammenhang ist fuer spaetere ML-Projekte wichtig: Ein Modell ist erst dann wirklich nuetzlich, wenn klar ist, wie es mit Sensorik, Software-Architektur und Entscheidungslogik zusammenspielt.
 
-From here you can click anywhere on the window and click [ENTER] to make it become active. 
-From here you can move the duckie towards the Duckiebot with the 'w', 'a', 's', and 'd' keys or you can move the 
-camera angle to view the Duckiebot with the mouse. If you are close enough to your Duckiebot, you can jump on with the 'E' key, 
-which should look like
+## Bearbeitungshinweise
 
-![duckiematrix_riding](assets/images/duckiematrix-riding.png)
+Falls gewuenscht, kannst du die Notebooks auch in Google Colab bearbeiten und ausfuehren. Die Dateien und Assets in diesem Repository sind so organisiert, dass sowohl experimentelles Arbeiten in Notebooks als auch die Einbindung in den Duckietown-Code moeglich sind.
 
-You can then you can drive the Duckiebot around with the 'w', 'a', 's', and 'd' keys (which will be useful later for data collection).
+Es lohnt sich, waehrend der Bearbeitung nicht nur auf "funktioniert" oder "funktioniert nicht" zu schauen, sondern systematisch zu reflektieren:
 
-If you get very lost from the road and you want to come back, you can do so with the 'R' key. 
+- Welche Eingaben beeinflussen die Distanzschaetzung besonders stark?
+- Welche Fehler entstehen durch ungenaue Detektionen?
+- Wie muessen Gewichte gespeichert werden, damit Training und Inferenz konsistent zusammenpassen?
+- Wie robust ist das Verhalten gegen veraenderte Perspektiven oder Bildbedingungen?
+- Welche Vereinfachungen wurden fuer diese Lernumgebung bewusst gemacht?
 
+## Transparenz
 
-### Building your code
+Dieses Repository basiert auf der Duckietown Object Detection Learning Experience, wurde jedoch fuer Lehrzwecke geklont und inhaltlich angepasst.
 
-You can build your code with 
+Zur Transparenz siehe das urspruengliche Duckietown-Repository:
 
-```
-dts code build -R ROBOT_NAME [--local]
-```
-
-This will build a docker image with your code compiled inside. 
-
-
-**Note**: For the time being if `ROBOT_NAME` is a **real** Duckiebot, you should build with the `--local` flag. This
-will cause the image to be built on your local machine rather than on the Duckiebot itself. 
-
-
-
-### 💻 Testing 
-
-
-To test your code by running:
-
-```
-dts code workbench [-m] -R ROBOT_NAME [--local]
-```
-
-You should include the `-m` if `ROBOT_NAME` is a virtual robot to indicate that you are running in the Duckiematrix.
-
-**Note**: For the time being, you should include the `--local` flag if `ROBOT_NAME` is a **real** Duckiebot. This
-will cause the code to be run on your laptop which is communicating with your Duckiebot. 
-
-
-However, before you can test you will need to:
-
- - Collect data
- - Annotate that data (automatically)
- - Train your object detection model
- - Export your model
-
-
-To get started you can proceed to the [first notebook](./notebooks/01-CNN/cnn.ipynb).
+https://github.com/duckietown/lx-object-detection
 
 ## Credits
 
-The previous (daffy) version of this LX was largely written by [Charlie Gauthier](https://velythyl.github.io/). 
-
-This updated (ente) version was largely written by [Shima Shahfar](https://ca.linkedin.com/in/shima-shahfar).
+Grundlage: Duckietown Object Detection Learning Experience.
